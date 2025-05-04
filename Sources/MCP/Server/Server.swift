@@ -201,7 +201,7 @@ public actor Server {
                         }
                     } catch let error where MCPError.isResourceTemporarilyUnavailable(error) {
                         // Resource temporarily unavailable, retry after a short delay
-                        try? await Task.sleep(for: .milliseconds(10))
+                        try? await Task.sleep(nanoseconds: 10_000_000)
                         continue
                     } catch {
                         await logger?.error(
@@ -337,7 +337,8 @@ public actor Server {
             } catch {
                 // Only add errors to response for requests (notifications don't have responses)
                 if case .request(let request) = item {
-                    let mcpError = error as? MCPError ?? MCPError.internalError(error.localizedDescription)
+                    let mcpError =
+                        error as? MCPError ?? MCPError.internalError(error.localizedDescription)
                     responses.append(AnyMethod.response(id: request.id, error: mcpError))
                 }
             }
@@ -365,7 +366,9 @@ public actor Server {
     ///   - request: The request to handle
     ///   - sendResponse: Whether to send the response immediately (true) or return it (false)
     /// - Returns: The response when sendResponse is false
-    private func handleRequest(_ request: Request<AnyMethod>, sendResponse: Bool = true) async throws -> Response<AnyMethod>? {
+    private func handleRequest(_ request: Request<AnyMethod>, sendResponse: Bool = true)
+        async throws -> Response<AnyMethod>?
+    {
         // Check if this is a pre-processed error request (empty method)
         if request.method.isEmpty && !sendResponse {
             // This is a placeholder for an invalid request that couldn't be parsed in batch mode
